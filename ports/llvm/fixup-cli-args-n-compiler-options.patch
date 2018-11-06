@@ -1,0 +1,50 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 31df6408..4df14a60 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -327,12 +327,43 @@ set(LLVM_ALL_TARGETS
+ # List of targets with JIT support:
+ set(LLVM_TARGETS_WITH_JIT X86 PowerPC AArch64 ARM Mips SystemZ)
+ 
+-set(LLVM_TARGETS_TO_BUILD "all"
+-    CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
++### Fix Vcpkg parameter passing
++
++# Persist previous content
++set(TARGETS_TO_BUILD ${LLVM_TARGETS_TO_BUILD})
++set(EXPERIMENTAL_TARGETS_TO_BUILD ${LLVM_EXPERIMENTAL_TARGETS_TO_BUILD})
++
++# Clear target variables
++unset(LLVM_TARGETS_TO_BUILD CACHE)
++unset(LLVM_EXPERIMENTAL_TARGETS_TO_BUILD CACHE)
++
++set(LLVM_TARGETS_TO_BUILD ""
++  CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
+ 
+ set(LLVM_EXPERIMENTAL_TARGETS_TO_BUILD ""
+   CACHE STRING "Semicolon-separated list of experimental targets to build.")
+ 
++# Create proper list of concatenated targets
++foreach(Target_Arch IN LISTS LLVM_ALL_TARGETS)
++  if(TARGETS_TO_BUILD MATCHES ${Target_Arch})
++    list(APPEND LLVM_TARGETS_TO_BUILD ${Target_Arch})
++    list(APPEND LLVM_EXPERIMENTAL_TARGETS_TO_BUILD ${Target_Arch})
++  endif()
++endforeach()
++
++### Tweak compiler and linker flags
++
++# Add /bigobj, otherwise LLVM fails to build with multiple back-ends
++set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
++
++# Incremental linker files are huge and we don't need them when not developing LLVM itself
++foreach(FLAG_TYPE EXE MODULE SHARED)
++  string(REPLACE "/INCREMENTAL" "/INCREMENTAL:NO" FLAG_TMP "${CMAKE_${FLAG_TYPE}_LINKER_FLAGS_DEBUG}")
++  string(REPLACE "/EDITANDCONTINUE" "" FLAG_TMP ${FLAG_TMP})
++  set(CMAKE_${FLAG_TYPE}_LINKER_FLAGS_DEBUG ${FLAG_TMP} CACHE STRING "Overriding default debug ${FLAG_TYPE} linker flags." FORCE)
++  mark_as_advanced(CMAKE_${FLAG_TYPE}_LINKER_FLAGS_DEBUG)
++endforeach()
++
+ option(BUILD_SHARED_LIBS
+   "Build all libraries as shared libraries instead of static" OFF)
+ 

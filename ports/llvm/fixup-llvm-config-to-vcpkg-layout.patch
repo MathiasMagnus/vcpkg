@@ -1,0 +1,25 @@
+diff --git a/tools/llvm-config/llvm-config.cpp b/tools/llvm-config/llvm-config.cpp
+index 08b096af..7b334f6a 100644
+--- a/tools/llvm-config/llvm-config.cpp
++++ b/tools/llvm-config/llvm-config.cpp
+@@ -283,7 +283,9 @@ int main(int argc, char **argv) {
+   // bin dir).
+   sys::fs::make_absolute(CurrentPath);
+   CurrentExecPrefix =
+-      sys::path::parent_path(sys::path::parent_path(CurrentPath)).str();
++      // Vcpkg expects tools one folder deeper than canonical LLVM install layout
++      sys::path::parent_path(sys::path::parent_path(
++        sys::path::parent_path(CurrentPath))).str();
+ 
+   // Check to see if we are inside a development tree by comparing to possible
+   // locations (prefix style or CMake style).
+@@ -337,7 +339,8 @@ int main(int argc, char **argv) {
+     sys::fs::make_absolute(ActivePrefix, path);
+     ActiveBinDir = path.str();
+     ActiveLibDir = ActivePrefix + "/lib" + LLVM_LIBDIR_SUFFIX;
+-    ActiveCMakeDir = ActiveLibDir + "/cmake/llvm";
++    // Vcpkg expects CMake scripts in share/llvm rather than lib/cmake/llvm
++    ActiveCMakeDir = CurrentExecPrefix + "/share/llvm";
+     ActiveIncludeOption = "-I" + ActiveIncludeDir;
+   }
+ 

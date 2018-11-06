@@ -1,0 +1,12 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 31df6408..1c020538 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -661,6 +661,7 @@ if (LLVM_USE_PERF)
+ endif (LLVM_USE_PERF)
+ 
+ message(STATUS "Constructing LLVMBuild project information")
++string(REPLACE " " ";" LLVM_TARGETS_TO_BUILD ${LLVM_TARGETS_TO_BUILD})
+ execute_process(
+   COMMAND ${PYTHON_EXECUTABLE} -B ${LLVMBUILDTOOL}
+             --native-target "${LLVM_NATIVE_ARCH}"
