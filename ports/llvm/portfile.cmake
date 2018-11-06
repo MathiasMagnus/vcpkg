@@ -7,45 +7,68 @@ if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
 endif()
 
 include(vcpkg_common_functions)
-set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/llvm-6.0.0.src)
+set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/llvm-7.0.0.src)
 vcpkg_download_distfile(ARCHIVE
-    URLS "http://releases.llvm.org/6.0.0/llvm-6.0.0.src.tar.xz"
-    FILENAME "llvm-6.0.0.src.tar.xz"
-    SHA512 a71fdd5ddc46f01327ad891cfcc198febdbe10769c57f14d8a4fb7d514621ee4080e1a641200d3353c16a16731d390270499ec6cd3dc98fadc570f3eb6b52b8c
+    URLS "http://releases.llvm.org/7.0.0/llvm-7.0.0.src.tar.xz"
+    FILENAME "llvm-7.0.0.src.tar.xz"
+    SHA512 bdc9b851c158b17e1bbeb7ac5ae49821bfb1251a3826fe8a3932cd1a43f9fb0d620c3de67150c1d9297bf0b86fa917e75978da29c3f751b277866dc90395abec
 )
 vcpkg_extract_source_archive(${ARCHIVE})
 
 vcpkg_download_distfile(CLANG_ARCHIVE
-    URLS "http://releases.llvm.org/6.0.0/cfe-6.0.0.src.tar.xz"
-    FILENAME "cfe-6.0.0.src.tar.xz"
-    SHA512 e886dd27448503bbfc7fd4f68eb089c19b2f2be4f0e5b26d3df253833f60b91d70b472a6b530063386e2252075b110ce9f5942800feddf6c34b94a75cf7bd5c6
+    URLS "http://releases.llvm.org/7.0.0/cfe-7.0.0.src.tar.xz"
+    FILENAME "cfe-7.0.0.src.tar.xz"
+    SHA512 17a658032a0160c57d4dc23cb45a1516a897e0e2ba4ebff29472e471feca04c5b68cff351cdf231b42aab0cff587b84fe11b921d1ca7194a90e6485913d62cb7
 )
 vcpkg_extract_source_archive(${CLANG_ARCHIVE} ${SOURCE_PATH}/tools)
 
 if(NOT EXISTS ${SOURCE_PATH}/tools/clang)
-  file(RENAME ${SOURCE_PATH}/tools/cfe-6.0.0.src ${SOURCE_PATH}/tools/clang)
+  file(RENAME ${SOURCE_PATH}/tools/cfe-7.0.0.src ${SOURCE_PATH}/tools/clang)
 endif()
 
 vcpkg_apply_patches(
     SOURCE_PATH ${SOURCE_PATH}
     PATCHES ${CMAKE_CURRENT_LIST_DIR}/install-cmake-modules-to-share.patch
+            ${CMAKE_CURRENT_LIST_DIR}/fixup-llvm-config-to-vcpkg-layout.patch
+            ${CMAKE_CURRENT_LIST_DIR}/fixup-cli-args-n-compiler-options.patch
 )
 
 vcpkg_find_acquire_program(PYTHON3)
 get_filename_component(PYTHON3_DIR "${PYTHON3}" DIRECTORY)
 set(ENV{PATH} "$ENV{PATH};${PYTHON3_DIR}")
 
+set(TARGETS_TO_BUILD X86)
+set(EXPERIMENTAL_TARGETS_TO_BUILD)
+
+if("amdgpu" IN_LIST FEATURES)
+    string(APPEND TARGETS_TO_BUILD AMDGPU)
+    string(APPEND EXPERIMENTAL_TARGETS_TO_BUILD AMDGPU)
+endif()
+
+if("arm" IN_LIST FEATURES)
+    string(APPEND TARGETS_TO_BUILD ARM)
+endif()
+
+if("nvptx" IN_LIST FEATURES)
+    string(APPEND TARGETS_TO_BUILD NVPTX)
+    string(APPEND EXPERIMENTAL_TARGETS_TO_BUILD NVPTX)
+endif()
+
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}
     PREFER_NINJA
     OPTIONS
-        -DLLVM_TARGETS_TO_BUILD=X86
+        -DLLVM_TARGETS_TO_BUILD=${TARGETS_TO_BUILD}
+        -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=${EXPERIMENTAL_TARGETS_TO_BUILD}
         -DLLVM_INCLUDE_TOOLS=ON
         -DLLVM_INCLUDE_UTILS=OFF
         -DLLVM_INCLUDE_EXAMPLES=OFF
         -DLLVM_INCLUDE_TESTS=OFF
+        -DLLVM_ENABLE_RTTI=ON
+        -DLLVM_ENABLE_EH=ON
         -DLLVM_ABI_BREAKING_CHECKS=FORCE_OFF
         -DLLVM_TOOLS_INSTALL_DIR=tools/llvm
+        -DLLVM_PARALLEL_LINK_JOBS=4
 )
 
 vcpkg_install_cmake()
