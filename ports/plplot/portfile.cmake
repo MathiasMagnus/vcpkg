@@ -1,7 +1,7 @@
 include(vcpkg_common_functions)
 
-set(PLPLOT_VERSION 5.13.0)
-set(PLPLOT_HASH 1d5cb5da17d4bde6d675585bff1f8dcb581719249a0b2687867e767703f8dab0870e7ea44b9549a497f4ac0141a3cabf6761c49520c0e2b26ffe581468512cbb)
+set(PLPLOT_VERSION 5.14.0)
+set(PLPLOT_HASH 08baada17c2a0166b6fe134bb15d4896aa8a4f3d1b51b7e22fd774df16ea7f2972b1fb93eaeb6f401372a38576ef4490ad45656b3dffabed6f3ef0e7719919e9)
 set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/plplot-${PLPLOT_VERSION})
 
 vcpkg_download_distfile(ARCHIVE
@@ -47,10 +47,23 @@ vcpkg_install_cmake()
 
 vcpkg_fixup_cmake_targets(CONFIG_PATH lib/cmake/plplot)
 
+# Patch config scripts
+vcpkg_apply_patches(
+    SOURCE_PATH ${CURRENT_PACKAGES_DIR}
+    PATCHES "${CMAKE_CURRENT_LIST_DIR}/modify-install-prefix-in-config-file.cmake"
+)
+
 # Remove unnecessary tool
 file(REMOVE
     ${CURRENT_PACKAGES_DIR}/debug/bin/pltek.exe
+)
+
+file(MAKE_DIRECTORY ${CURRENT_PACKAGES_DIR}/tools)
+file(MAKE_DIRECTORY ${CURRENT_PACKAGES_DIR}/tools/plplot)
+
+file(RENAME
     ${CURRENT_PACKAGES_DIR}/bin/pltek.exe
+    ${CURRENT_PACKAGES_DIR}/tools/plplot/pltek.exe
 )
 
 if(VCPKG_LIBRARY_LINKAGE STREQUAL "static")
