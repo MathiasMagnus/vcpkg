@@ -2,10 +2,10 @@ include(vcpkg_common_functions)
 
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
-    REPO clMathLibraries/clBLAS
-    REF v2.12
-    SHA512 5d9b0c58adde69e83d95e9c713e0cdc5f64785fe7e05553a14c57fa483c4ef39e9dc780c26880a7f15924967d5ce4ea29035c29d63eac7ee5a2ae5ddacac2b72
-    HEAD_REF master
+    REPO MathiasMagnus/clBLAS
+    REF cache-fix
+    SHA512 fb8cba9b310f76be192e0dcc4c42cee3569c9b21830498c1e29c18257272f7cdb6448172d0eda7f4fac4e29362ab48c240033190d57b7bf9b57f1512701b49a8
+    HEAD_REF cache-fix
 )
 
 # v2.12 has a very old FindOpenCL.cmake using OPENCL_ vs. OpenCL_ var names
