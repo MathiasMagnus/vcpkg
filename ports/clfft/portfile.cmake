@@ -32,8 +32,6 @@ vcpkg_configure_cmake(
 
 vcpkg_install_cmake()
 
-file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/include)
-
 file(INSTALL
         "${SOURCE_PATH}/LICENSE"
     DESTINATION
@@ -48,3 +46,7 @@ if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 vcpkg_copy_pdbs()
+
+message(STATUS "REMOVE_RECURSE: ${CURRENT_PACKAGES_DIR}/debug/share")
+file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/share)
+file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/include)
