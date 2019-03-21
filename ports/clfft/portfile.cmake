@@ -14,12 +14,6 @@ if(NOT VCPKG_CMAKE_SYSTEM_NAME) # Empty when Windows
       PATCHES ${CMAKE_CURRENT_LIST_DIR}/cmake.win.patch
   )
 endif()
-if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  vcpkg_apply_patches(
-      SOURCE_PATH ${SOURCE_PATH}
-      PATCHES ${CMAKE_CURRENT_LIST_DIR}/cmake.linux.patch
-  )
-endif()
 
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}/src
@@ -47,6 +41,5 @@ endif()
 
 vcpkg_copy_pdbs()
 
-message(STATUS "REMOVE_RECURSE: ${CURRENT_PACKAGES_DIR}/debug/share")
 file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/share)
 file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/include)
