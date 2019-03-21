@@ -4,7 +4,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO MathiasMagnus/clBLAS
     REF cache-fix
-    SHA512 fb8cba9b310f76be192e0dcc4c42cee3569c9b21830498c1e29c18257272f7cdb6448172d0eda7f4fac4e29362ab48c240033190d57b7bf9b57f1512701b49a8
+    SHA512 3655e92699fd491434c70ff78badb2b3cf315f17e3fa207dc2778ffd216236e6d2ff25426151f64c0ee3b4b85a03b50b5e65dd4638cd4acbc8a2617067d1cfd7
     HEAD_REF cache-fix
 )
 
@@ -14,10 +14,18 @@ file(
     REMOVE ${SOURCE_PATH}/src/FindOpenCL.cmake
 )
 
-vcpkg_apply_patches(
-    SOURCE_PATH ${SOURCE_PATH}
-    PATCHES ${CMAKE_CURRENT_LIST_DIR}/cmake.patch
-)
+if(NOT VCPKG_CMAKE_SYSTEM_NAME) # Empty when Windows
+  vcpkg_apply_patches(
+      SOURCE_PATH ${SOURCE_PATH}
+      PATCHES ${CMAKE_CURRENT_LIST_DIR}/cmake.win.patch
+  )
+endif()
+if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  vcpkg_apply_patches(
+      SOURCE_PATH ${SOURCE_PATH}
+      PATCHES ${CMAKE_CURRENT_LIST_DIR}/cmake.linux.patch
+  )
+endif()
 
 vcpkg_find_acquire_program(PYTHON3)
 
@@ -53,6 +61,11 @@ file(REMOVE
         ${CURRENT_PACKAGES_DIR}/debug/bin/vcruntime140d.dll
 )
 
-vcpkg_fixup_cmake_targets(CONFIG_PATH "CMake")
+if(NOT VCPKG_CMAKE_SYSTEM_NAME) # Empty when Windows
+  vcpkg_fixup_cmake_targets(CONFIG_PATH "CMake")
+endif()
+if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  vcpkg_fixup_cmake_targets(CONFIG_PATH "lib/cmake/clBLAS")
+endif()
 
 vcpkg_copy_pdbs()
