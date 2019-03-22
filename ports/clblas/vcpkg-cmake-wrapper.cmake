@@ -1,0 +1,10 @@
+_find_package(${ARGS})
+if(NOT BUILD_SHARED_LIBS AND (NOT CMAKE_SYSTEM_NAME MATCHES "Darwin"))
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    list(APPEND clBLAS_Extra_Libs m stdc++)
+  endif(CMAKE_SYSTEM_NAME MATCHES "Linux")
+
+  if(TARGET clBLAS)
+      set_property(TARGET clBLAS APPEND PROPERTY INTERFACE_LINK_LIBRARIES ${clBLAS_Extra_Libs})
+  endif()
+endif()
