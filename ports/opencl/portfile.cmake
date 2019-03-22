@@ -4,13 +4,13 @@ include(vcpkg_common_functions)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO KhronosGroup/OpenCL-Headers
-    REF f039db6764d52388658ef15c30b2237bbda49803
-    SHA512 5909a85f96477d731059528303435f06255e98ed8df9d4cd2b62c744b5fe41408c69c0d4068421a2813eb9ad9d70d7f1bace9ebf0db19cc09e71bb8066127c5f
+    REF a749dc6b85b3dcb57a54b17fcbf279c4f7198648
+    SHA512 dffa1a26641fcb4fa8040971c603deeae111d0615d18e6205e35fe4cb1c19b4b0f5b331e9de28f6dc6aa21d9a549bc707e16768bb1cc0f5b6cfaec918e6ac465
     HEAD_REF master
 )
 
 file(INSTALL
-        "${SOURCE_PATH}/opencl22/CL"
+        "${SOURCE_PATH}/CL"
     DESTINATION
         ${CURRENT_PACKAGES_DIR}/include
 )
@@ -19,8 +19,8 @@ file(INSTALL
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO KhronosGroup/OpenCL-CLHPP
-    REF 5dd8bb9e32a8e2f72621566b296ac8143a554270
-    SHA512 2909fe2b979b52724ef8d285180d8bfd30bdd56cb79da4effc9e03b576ec7edb5497c99a9fa30541fe63037c84ddef21d4a73e7927f3813baab2a2afeecd55ab
+    REF bbccc50adcd667d4f7c58960b586bdc60c13f7f0
+    SHA512 1bfa4461d339586bf9f32498237631f20740e3cff29242b37db96ce98e9b3fad20878c983ddc37a21ff54c4025c79e19c1c6764f71d29376498d47d569e81784
     HEAD_REF master
 )
 
@@ -47,13 +47,18 @@ message(STATUS "Generating OpenCL C++ headers done")
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO KhronosGroup/OpenCL-ICD-Loader
-    REF 26a38983cbe5824fd5be03eab8d037758fc44360
-    SHA512 3029f758ff0c39b57aa10d881af68e73532fd179c54063ed1d4529b7d6e27a5219e3c24b7fb5598d790ebcdc2441e00001a963671dc90fef2fc377c76d724f54
+    REF b342ff7b7f70a4b3f2cfc53215af8fa20adc3d86
+    SHA512 6e7620a4a971fb292fd4079a2c011c7b31f553ec14bf5503462ac3fe6769931acf549e9c8a2d5aafd6307dc246432006ecf65e5d8dcbc14235bec72cc858b618
     HEAD_REF master
 )
 
-if(VCPKG_LIBRARY_LINKAGE STREQUAL "static")
-    message(STATUS "Building the ICD loader as a static library is not supported. Building as DLLs instead.")
+vcpkg_apply_patches(
+    SOURCE_PATH ${SOURCE_PATH}
+    PATCHES "${CMAKE_CURRENT_LIST_DIR}/do-not-enforce-dynamic-library.patch"
+)
+
+if(VCPKG_LIBRARY_LINKAGE STREQUAL "static" AND (NOT VCPKG_CMAKE_SYSTEM_NAME)) # Empty when Windows
+    message(STATUS "Building the ICD loader as a static library on Windows is not supported. Building as DLLs instead.")
     set(VCPKG_LIBRARY_LINKAGE "dynamic")
 endif()
 
@@ -66,17 +71,32 @@ vcpkg_configure_cmake(
 
 vcpkg_build_cmake(TARGET OpenCL)
 
-file(INSTALL
-        "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/OpenCL.lib"
-    DESTINATION
-        ${CURRENT_PACKAGES_DIR}/lib
-)
-
-file(INSTALL
-        "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg/OpenCL.lib"
-    DESTINATION
-        ${CURRENT_PACKAGES_DIR}/debug/lib
-)
+if(NOT VCPKG_CMAKE_SYSTEM_NAME) # Empty when Windows
+  file(INSTALL
+          "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/OpenCL.lib"
+      DESTINATION
+          ${CURRENT_PACKAGES_DIR}/lib
+  )
+  
+  file(INSTALL
+          "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg/OpenCL.lib"
+      DESTINATION
+          ${CURRENT_PACKAGES_DIR}/debug/lib
+  )
+endif()
+if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  file(INSTALL
+          "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/libOpenCL.a"
+      DESTINATION
+          ${CURRENT_PACKAGES_DIR}/lib
+  )
+  
+  file(INSTALL
+          "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg/libOpenCL.a"
+      DESTINATION
+          ${CURRENT_PACKAGES_DIR}/debug/lib
+  )
+endif()
 
 file(INSTALL
         "${SOURCE_PATH}/LICENSE.txt"
@@ -85,6 +105,12 @@ file(INSTALL
 )
 file(COPY
         ${CMAKE_CURRENT_LIST_DIR}/usage
+    DESTINATION
+        ${CURRENT_PACKAGES_DIR}/share/${PORT}
+)
+
+file(COPY
+        ${CMAKE_CURRENT_LIST_DIR}/vcpkg-cmake-wrapper.cmake
     DESTINATION
         ${CURRENT_PACKAGES_DIR}/share/${PORT}
 )

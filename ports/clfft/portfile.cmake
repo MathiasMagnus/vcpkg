@@ -2,16 +2,18 @@ include(vcpkg_common_functions)
 
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
-    REPO clMathLibraries/clFFT
-    REF v2.12.2
-    SHA512 19e9a4e06f76ae7c7808d1188677d5553c43598886a75328b7801ab2ca68e35206839a58fe2f958a44a6f7c83284dc9461cd0e21c37d1042bf82e24aad066be8
-    HEAD_REF master
+    REPO MathiasMagnus/clFFT
+    REF cache-fix
+    SHA512 485c76a16ca2a8b4c5a04a554825fb75599695a9f1ebed56ed5c6dc9e61154db923ddb467ad6a04f6d26993cb0b8696236d2ee87dd4a98a0b1ddcab1d62177f1
+    HEAD_REF cache-fix
 )
 
-vcpkg_apply_patches(
-    SOURCE_PATH ${SOURCE_PATH}
-    PATCHES ${CMAKE_CURRENT_LIST_DIR}/tweak-install.patch
-)
+if(NOT VCPKG_CMAKE_SYSTEM_NAME) # Empty when Windows
+  vcpkg_apply_patches(
+      SOURCE_PATH ${SOURCE_PATH}
+      PATCHES ${CMAKE_CURRENT_LIST_DIR}/cmake.win.patch
+  )
+endif()
 
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}/src
@@ -24,14 +26,20 @@ vcpkg_configure_cmake(
 
 vcpkg_install_cmake()
 
-file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/include)
-
 file(INSTALL
         "${SOURCE_PATH}/LICENSE"
     DESTINATION
         ${CURRENT_PACKAGES_DIR}/share/clfft/copyright
 )
 
-vcpkg_fixup_cmake_targets(CONFIG_PATH "CMake")
+if(NOT VCPKG_CMAKE_SYSTEM_NAME) # Empty when Windows
+  vcpkg_fixup_cmake_targets(CONFIG_PATH "CMake")
+endif()
+if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  vcpkg_fixup_cmake_targets(CONFIG_PATH "lib/cmake/clFFT")
+endif()
 
 vcpkg_copy_pdbs()
+
+file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/share)
+file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/include)
