@@ -2,3 +2,6 @@ Source: llvm
 Version: 7.0.0
 Description: The LLVM Compiler Infrastructure
 Build-Depends: atlmfc (windows)
+
+Feature: target-amdgpu
+Description: Build with AMDGPU target.

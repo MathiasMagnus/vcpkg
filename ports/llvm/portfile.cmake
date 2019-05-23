@@ -29,23 +29,34 @@ endif()
 vcpkg_apply_patches(
     SOURCE_PATH ${SOURCE_PATH}
     PATCHES ${CMAKE_CURRENT_LIST_DIR}/install-cmake-modules-to-share.patch
+            ${CMAKE_CURRENT_LIST_DIR}/fixup-llvm-config-to-vcpkg-layout.patch
 )
 
 vcpkg_find_acquire_program(PYTHON3)
 get_filename_component(PYTHON3_DIR "${PYTHON3}" DIRECTORY)
 set(ENV{PATH} "$ENV{PATH};${PYTHON3_DIR}")
 
+if("target-amdgpu" IN_LIST FEATURES)
+    list(APPEND EXPERIMENTAL_TARGETS_TO_BUILD AMDGPU)
+endif()
+
+if(EXPERIMENTAL_TARGETS_TO_BUILD)
+  set(EXPERIMENTAL_TARGETS_TO_BUILD_OPTION "-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=${EXPERIMENTAL_TARGETS_TO_BUILD}")
+endif()
+
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}
     PREFER_NINJA
     OPTIONS
         -DLLVM_TARGETS_TO_BUILD=X86
+        ${EXPERIMENTAL_TARGETS_TO_BUILD_OPTION}
         -DLLVM_INCLUDE_TOOLS=ON
         -DLLVM_INCLUDE_UTILS=OFF
         -DLLVM_INCLUDE_EXAMPLES=OFF
         -DLLVM_INCLUDE_TESTS=OFF
         -DLLVM_ABI_BREAKING_CHECKS=FORCE_OFF
         -DLLVM_TOOLS_INSTALL_DIR=tools/llvm
+        -DLLVM_PARALLEL_LINK_JOBS=2
 )
 
 vcpkg_install_cmake()
